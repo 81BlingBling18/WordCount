@@ -1,3 +1,5 @@
+package UnitTest;
+
 import java.util.ArrayList;
 
 public class Commands {
@@ -40,21 +42,24 @@ public class Commands {
         if (!(c == commands.c && w == commands.w && l == commands.l && a == commands.a && s == commands.s)) {
             return false;
         }
-        for (String s : filePath) {
-//            System.out.println(s);
-        }
-
-            System.out.println("hello");
         if (filePath.size() != commands.filePath.size()) {
             return false;
         }
 
+        boolean flag = false;
         for (int i = 0;i<filePath.size();i++) {
-            if (!filePath.get(i).endsWith(commands.filePath.get(i))) {
+            for (int j = 0;j<commands.filePath.size();j++) {
+                if (filePath.get(i).endsWith(commands.filePath.get(j))) {
+                    flag = true;
+                }
+            }
+            if (flag) {
+                flag = false;
+            } else {
                 return false;
             }
-        }
 
+        }
         if (stopListPath == null && commands.stopListPath != null || stopListPath != null && commands.stopListPath == null) {
             return false;
         }

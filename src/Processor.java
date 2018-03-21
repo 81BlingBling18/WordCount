@@ -21,6 +21,7 @@ public class Processor {
     private boolean l = true;
     private boolean a = true;
 
+    private boolean noteFlag = false;
     private HashMap<String, String> stopList = new HashMap<>();
     private boolean stopListUsed = false;
 
@@ -28,6 +29,8 @@ public class Processor {
         charCount = 0;
         wordCount = 0;
         lineCount = 0;
+
+        noteFlag = false;
 
         codeLineCount = 0;
         emptyLineCount = 0;
@@ -78,14 +81,10 @@ public class Processor {
 
     }
 
-    void process(String p, ArrayList<Boolean> functions, String stopListPath) {
+    ArrayList<String> process(String path, ArrayList<Boolean> functions, String stopListPath) {
         //变量初始化
-        stopListPath = System.getProperty("user.dir") + "\\src\\stopList.txt";
         init(functions, stopListPath);
 
-        String path = System.getProperty("user.dir") + "\\src\\test.txt";
-
-        //读取stopList列表
 
         BufferedReader bufferedReader = null;
 
@@ -93,7 +92,6 @@ public class Processor {
             bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
             String line = null;
             while ((line = bufferedReader.readLine()) != null) {
-//                System.out.println(line);
 
                 if (c) {
                     String tmpLine = line.replaceAll("        ", " ");
@@ -110,8 +108,11 @@ public class Processor {
 
                 if (a) {
                     processCode(line);
+                    System.out.println(noteLineCount + "   flag  " + noteFlag);
+
                 }
             }
+            lineCount--;
             bufferedReader.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,9 +142,8 @@ public class Processor {
         if (a) {
             result.add(fileName + "代码行/空行/注释行: " + String.format("%d/%d/%d", codeLineCount, emptyLineCount, noteLineCount));
         }
-        for (String s : result) {
-            System.out.println(s);
-        }
+
+        return result;
     }
 
     private void processWord(String rawLine) {
@@ -155,13 +155,49 @@ public class Processor {
         for (String s : pieces) {
             if ((!"".equals(s)) &&(!stopListUsed||stopList.get(s) == null)) {
                 wordCount++;
-                System.out.println(s);
-                System.out.println("".equals(s));
             }
         }
     }
 
-    private void processCode(String line){
 
+    private void processCode(String rawLine){
+        String tmp = rawLine.replaceAll("[ \t]", "");
+        int index = 0;
+        while ((rawLine.charAt(index) + "").equals(" ")) {
+            index++;
+        }
+        tmp = rawLine.substring(index, rawLine.length());
+        System.out.println(tmp);
+        if (tmp.length() <= 1) {
+            emptyLineCount++;
+            return;
+        }
+
+        if (tmp.contains("/*")) {
+            noteFlag = true;
+        }
+        if (tmp.contains("*/")&&noteFlag) {
+            noteFlag = false;
+        }
+
+        if (noteFlag ) {
+            noteLineCount++;
+            return;
+        } else if (tmp.startsWith("//")
+                || (tmp.startsWith("/*")
+                && (!tmp.contains("*/") || (tmp.endsWith("*/") || tmp.endsWith("*/}"))))
+                || (tmp.startsWith("{/*")
+                && (!tmp.contains("*/") || (tmp.endsWith("*/") || tmp.endsWith("*/}"))))
+                ||(tmp.startsWith("}/*")
+                && (!tmp.contains("*/") || (tmp.endsWith("*/") || tmp.endsWith("*/}"))))
+                || tmp.startsWith("{//")
+                || tmp.startsWith("}//")
+                ||tmp.equals("*/")
+                ||tmp.equals("*/}")) {
+            noteLineCount++;
+            return;
+        }
+
+        codeLineCount++;
     }
 }
